@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Revisão Espaçada</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg-secondary: #f5f5f3; --bg-tertiary: #eeede8;
+    --text: #1a1a18; --text-secondary: #6b6b67; --text-tertiary: #9e9e9a;
+    --border: rgba(0,0,0,0.12); --border-strong: rgba(0,0,0,0.25);
+    --info-bg: #e6f1fb; --info-text: #185fa5; --info-border: rgba(24,95,165,0.3);
+    --success-bg: #eaf3de; --success-text: #3b6d11; --success-border: rgba(59,109,17,0.3);
+    --danger-bg: #fcebeb; --danger-text: #a32d2d; --danger-border: rgba(163,45,45,0.3);
+    --warn-bg: #faeeda; --warn-text: #854f0b; --warn-border: rgba(133,79,11,0.3);
+    --accent: #1D9E75; --radius-md: 8px; --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg-secondary: #2a2a27; --bg-tertiary: #222220;
+      --text: #f0ede6; --text-secondary: #9e9e9a; --text-tertiary: #6b6b67;
+      --border: rgba(255,255,255,0.10); --border-strong: rgba(255,255,255,0.22);
+      --info-bg: #0c2e50; --info-text: #85b7eb; --info-border: rgba(133,183,235,0.25);
+      --success-bg: #172e09; --success-text: #97c459; --success-border: rgba(151,196,89,0.25);
+      --danger-bg: #2e1212; --danger-text: #f09595; --danger-border: rgba(240,149,149,0.25);
+      --warn-bg: #2e1f07; --warn-text: #fac775; --warn-border: rgba(250,199,117,0.25);
+    }
+  }
+  body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+  .container { max-width: 680px; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+  header h1 { font-size: 20px; font-weight: 500; color: var(--text); }
+  header .icon { width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--accent); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
+
+  /* LOGIN */
+  #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; text-align: center; }
+  #login-screen h2 { font-size: 22px; font-weight: 500; }
+  #login-screen p { font-size: 14px; color: var(--text-secondary); max-width: 300px; }
+  .btn-google { display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; border-radius: var(--radius-md); border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text); font-size: 15px; font-family: var(--font); cursor: pointer; transition: background 0.15s; }
+  .btn-google:hover { background: var(--bg-secondary); }
+  .btn-google img { width: 20px; height: 20px; }
+  #user-bar { display: none; align-items: center; justify-content: space-between; background: var(--bg-secondary); border-radius: var(--radius-md); padding: 8px 14px; margin-bottom: 1.5rem; font-size: 13px; color: var(--text-secondary); }
+  #user-bar span { color: var(--text); font-weight: 500; }
+
+  .tabs { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 1.5rem; background: var(--bg); }
+  .tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; cursor: pointer; color: var(--text-secondary); background: transparent; border: none; font-family: var(--font); transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .tab.active { background: var(--bg-secondary); color: var(--text); font-weight: 500; }
+
+  .section-title { font-size: 12px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 12px; }
+  .empty { color: var(--text-tertiary); font-size: 14px; text-align: center; padding: 2rem; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  @media (max-width: 480px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 12px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 500; color: var(--text); }
+  .stat-lbl { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .row:last-child { border-bottom: none; }
+  .row-left { display: flex; align-items: flex-start; gap: 10px; }
+  .row-name { font-size: 15px; color: var(--text); }
+  .row-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+  .tag-due { background: var(--danger-bg); color: var(--danger-text); }
+  .tag-ok  { background: var(--success-bg); color: var(--success-text); }
+
+  .check-btn { width: 30px; height: 30px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 17px; transition: all 0.15s; flex-shrink: 0; }
+  .check-btn:hover { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+  .check-btn.done { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+  .forget-btn { width: 30px; height: 30px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-size: 15px; transition: all 0.15s; flex-shrink: 0; }
+  .forget-btn:hover { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+
+  .btn { border: 0.5px solid var(--border-strong); background: transparent; border-radius: var(--radius-md); padding: 7px 14px; font-size: 13px; cursor: pointer; color: var(--text); font-family: var(--font); transition: background 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--bg-secondary); }
+  .btn-primary { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
+  .btn-primary:hover { opacity: 0.85; background: var(--info-bg); }
+  .btn-danger { color: var(--danger-text); border-color: var(--danger-border); }
+  .btn-danger:hover { background: var(--danger-bg); }
+
+  input[type="text"], textarea { width: 100%; padding: 8px 12px; border: 0.5px solid var(--border-strong); border-radius: var(--radius-md); font-size: 14px; font-family: var(--font); background: var(--bg); color: var(--text); margin-bottom: 8px; outline: none; transition: border-color 0.15s; }
+  input[type="text"]:focus, textarea:focus { border-color: var(--info-border); box-shadow: 0 0 0 3px rgba(24,95,165,0.08); }
+  textarea { resize: vertical; min-height: 64px; }
+
+  .mode-toggle { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 8px; }
+  .mode-btn { flex: 1; padding: 8px; font-size: 13px; cursor: pointer; background: transparent; border: none; color: var(--text-secondary); font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 5px; transition: background 0.15s; }
+  .mode-btn.active { background: var(--bg-secondary); color: var(--text); font-weight: 500; }
+  .mode-hint { font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px; padding: 6px 10px; background: var(--bg-secondary); border-radius: var(--radius-md); }
+
+  .error-msg { font-size: 12px; color: var(--danger-text); background: var(--danger-bg); border-radius: var(--radius-md); padding: 6px 10px; margin-bottom: 8px; display: none; align-items: center; gap: 6px; }
+
+  .prog-bg { background: var(--bg-secondary); border-radius: 99px; height: 5px; margin-top: 5px; }
+  .prog { height: 5px; border-radius: 99px; background: var(--accent); transition: width 0.3s; }
+
+  .mat-row { display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid var(--border); gap: 10px; }
+  .mat-row:last-child { border-bottom: none; }
+  .note-area { width: 100%; font-size: 12px; padding: 6px 8px; border-radius: var(--radius-md); border: 0.5px solid var(--border); background: var(--bg-secondary); color: var(--text); resize: vertical; min-height: 48px; margin-top: 6px; font-family: var(--font); }
+  .note-area:focus { outline: none; border-color: var(--info-border); }
+  .mat-note { font-size: 12px; color: var(--text-secondary); margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
+
+  .streak-banner { display: flex; align-items: center; gap: 10px; background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 1.5rem; font-size: 14px; }
+  .streak-num { font-size: 20px; font-weight: 500; }
+  .io-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 1.5rem; }
+  @media (max-width: 480px) { .cal-grid { grid-template-columns: repeat(4, 1fr); } }
+  .cal-day { border-radius: var(--radius-md); padding: 8px 4px; text-align: center; font-size: 12px; border: 0.5px solid var(--border); background: var(--bg); }
+  .cal-day.today { border-color: var(--info-border); background: var(--info-bg); }
+  .cal-date { font-weight: 500; color: var(--text); font-size: 13px; }
+  .cal-count { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  .cal-day.has-due .cal-count { color: var(--danger-text); font-weight: 500; }
+  .mt { margin-top: 1.5rem; }
+
+  .saving-indicator { font-size: 12px; color: var(--text-tertiary); display: none; align-items: center; gap: 4px; }
+  .saving-indicator.show { display: flex; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="icon"><i class="ti ti-brain" aria-hidden="true"></i></div>
+    <h1>Revisão Espaçada</h1>
+    <div class="saving-indicator" id="saving-indicator"><i class="ti ti-cloud" aria-hidden="true"></i> Salvando...</div>
+  </header>
+
+  <!-- TELA DE LOGIN -->
+  <div id="login-screen">
+    <div class="icon" style="width:56px;height:56px;font-size:28px"><i class="ti ti-brain" aria-hidden="true"></i></div>
+    <h2>Revisão Espaçada</h2>
+    <p>Entre com sua conta Google para sincronizar seus estudos em qualquer dispositivo.</p>
+    <button class="btn-google" onclick="loginGoogle()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+      Entrar com Google
+    </button>
+  </div>
+
+  <!-- APP (oculto até login) -->
+  <div id="app-content" style="display:none">
+    <div id="user-bar">
+      <span id="user-name"></span>
+      <button class="btn" onclick="logout()" style="padding:4px 10px;font-size:12px"><i class="ti ti-logout" aria-hidden="true"></i> Sair</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('hoje')"><i class="ti ti-calendar" aria-hidden="true"></i> Hoje</button>
+      <button class="tab" onclick="showTab('materias')"><i class="ti ti-books" aria-hidden="true"></i> Matérias</button>
+      <button class="tab" onclick="showTab('stats')"><i class="ti ti-chart-bar" aria-hidden="true"></i> Progresso</button>
+    </div>
+
+    <!-- ABA HOJE -->
+    <div id="tab-hoje">
+      <div id="streak-banner" class="streak-banner"></div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-num" id="s-due">0</div><div class="stat-lbl">Para revisar</div></div>
+        <div class="stat"><div class="stat-num" id="s-done">0</div><div class="stat-lbl">Feitas hoje</div></div>
+        <div class="stat"><div class="stat-num" id="s-ok">0</div><div class="stat-lbl">Em dia</div></div>
+        <div class="stat"><div class="stat-num" id="s-total">0</div><div class="stat-lbl">Total</div></div>
+      </div>
+      <div class="section-title">Revisar hoje</div>
+      <div class="card" id="due-list"></div>
+      <div class="section-title mt">Em dia</div>
+      <div class="card" id="ok-list"></div>
+    </div>
+
+    <!-- ABA MATÉRIAS -->
+    <div id="tab-materias" style="display:none">
+      <div class="card">
+        <input type="text" id="input-name" placeholder="Nome da matéria (ex: Direito Civil)" maxlength="80" />
+        <textarea id="input-note" placeholder="Anotação opcional (resumo, link, dicas...)"></textarea>
+        <div class="error-msg" id="dup-error"><i class="ti ti-alert-circle" aria-hidden="true"></i> Já existe uma matéria com esse nome.</div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btn-nova" onclick="setMode('nova')"><i class="ti ti-plus" aria-hidden="true"></i> Matéria nova</button>
+          <button class="mode-btn" id="btn-rev" onclick="setMode('revisando')"><i class="ti ti-refresh" aria-hidden="true"></i> Revisando hoje</button>
+        </div>
+        <div class="mode-hint" id="mode-hint">Estudei hoje pela primeira vez — próxima revisão amanhã.</div>
+        <button class="btn btn-primary" onclick="addMateria()"><i class="ti ti-plus" aria-hidden="true"></i> Adicionar</button>
+      </div>
+      <div class="io-row">
+        <button class="btn" onclick="exportar()"><i class="ti ti-download" aria-hidden="true"></i> Exportar</button>
+        <label class="btn" style="cursor:pointer"><i class="ti ti-upload" aria-hidden="true"></i> Importar<input type="file" accept=".json" style="display:none" onchange="importar(event)"></label>
+      </div>
+      <div class="section-title">Suas matérias</div>
+      <div class="card" id="mat-list"></div>
+    </div>
+
+    <!-- ABA PROGRESSO -->
+    <div id="tab-stats" style="display:none">
+      <div class="section-title">Próximos 14 dias</div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="section-title">Revisões por dia (últimas 4 semanas)</div>
+      <div class="card" style="padding:1rem">
+        <div style="position:relative;width:100%;height:220px">
+          <canvas id="chart-week" role="img" aria-label="Revisões por dia nas últimas 4 semanas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBCs5ejfGOx394Pl4-T-DZfLD6pQd3Iii4",
+  authDomain: "revisao-espacada-77fa7.firebaseapp.com",
+  projectId: "revisao-espacada-77fa7",
+  storageBucket: "revisao-espacada-77fa7.firebasestorage.app",
+  messagingSenderId: "89128217118",
+  appId: "1:89128217118:web:67085481d0be2b6ab2dc0f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const INTERVALS = [1, 3, 7, 14, 30, 60, 120];
+let mode = 'nova';
+let chartInstance = null;
+let activeTab = 'hoje';
+let currentUser = null;
+let saveTimeout = null;
+
+let data = { materias: [], reviewed_today: [], last_day: '', streak: 0, last_streak_day: '', history: {} };
+
+function today() { return new Date().toISOString().slice(0, 10); }
+function addDays(s, n) { const d = new Date(s); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+function fmtDate(s) { const [, m, d] = s.split('-'); return `${d}/${m}`; }
+
+// ---- FIREBASE AUTH ----
+window.loginGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, provider); }
+  catch (e) { alert('Erro ao entrar: ' + e.message); }
+};
+
+window.logout = async () => {
+  await signOut(auth);
+  location.reload();
+};
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+    document.getElementById('user-bar').style.display = 'flex';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    await loadFromFirestore();
+    checkDayReset();
+    renderActive();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-content').style.display = 'none';
+    document.getElementById('user-bar').style.display = 'none';
+  }
+});
+
+// ---- FIRESTORE ----
+async function loadFromFirestore() {
+  try {
+    const ref = doc(db, 'users', currentUser.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      data = snap.data();
+      if (!data.history) data.history = {};
+    }
+  } catch (e) { console.error('Erro ao carregar:', e); }
+}
+
+async function saveToFirestore() {
+  if (!currentUser) return;
+  const indicator = document.getElementById('saving-indicator');
+  indicator.classList.add('show');
+  try {
+    const ref = doc(db, 'users', currentUser.uid);
+    await setDoc(ref, data);
+  } catch (e) { console.error('Erro ao salvar:', e); }
+  finally { indicator.classList.remove('show'); }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => saveToFirestore(), 800);
+}
+
+function checkDayReset() {
+  if (data.last_day !== today()) {
+    data.reviewed_today = [];
+    data.last_day = today();
+    checkStreakBreak();
+    scheduleSave();
+  }
+}
+
+function checkStreakBreak() {
+  const yesterday = addDays(today(), -1);
+  if (data.streak > 0 && data.last_streak_day && data.last_streak_day !== yesterday && data.last_streak_day !== today()) {
+    data.streak = 0;
+  }
+}
+
+// ---- LÓGICA DO APP ----
+window.setMode = m => {
+  mode = m;
+  document.getElementById('btn-nova').classList.toggle('active', m === 'nova');
+  document.getElementById('btn-rev').classList.toggle('active', m === 'revisando');
+  document.getElementById('mode-hint').textContent = m === 'nova'
+    ? 'Estudei hoje pela primeira vez — próxima revisão amanhã.'
+    : 'Estou revisando hoje — aparece na lista para marcar como feita.';
+};
+
+window.addMateria = () => {
+  const nameRaw = document.getElementById('input-name').value.trim();
+  const note = document.getElementById('input-note').value.trim();
+  if (!nameRaw) return;
+  const errEl = document.getElementById('dup-error');
+  if (data.materias.some(m => m.name.toLowerCase() === nameRaw.toLowerCase())) {
+    errEl.style.display = 'flex'; return;
+  }
+  errEl.style.display = 'none';
+  data.materias.push({
+    id: Date.now(), name: nameRaw, note, stage: 0,
+    next_review: mode === 'nova' ? addDays(today(), INTERVALS[0]) : today(),
+    created: today(), last_reviewed: mode === 'nova' ? today() : null
+  });
+  scheduleSave();
+  document.getElementById('input-name').value = '';
+  document.getElementById('input-note').value = '';
+  renderActive();
+};
+
+document.getElementById('input-name').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); window.addMateria(); } });
+document.getElementById('input-name').addEventListener('input', () => { document.getElementById('dup-error').style.display = 'none'; });
+
+window.markDone = id => {
+  const m = data.materias.find(x => x.id === id);
+  if (!m) return;
+  m.stage = Math.min(m.stage + 1, INTERVALS.length - 1);
+  m.last_reviewed = today();
+  m.next_review = addDays(today(), INTERVALS[m.stage]);
+  if (!data.reviewed_today.includes(id)) data.reviewed_today.push(id);
+  if (!data.history[today()]) data.history[today()] = 0;
+  data.history[today()]++;
+  updateStreak();
+  scheduleSave();
+  renderActive();
+};
+
+window.markForgot = id => {
+  const m = data.materias.find(x => x.id === id);
+  if (!m) return;
+  m.stage = Math.max(m.stage - 1, 0);
+  m.last_reviewed = today();
+  m.next_review = addDays(today(), 1);
+  if (!data.reviewed_today.includes(id)) data.reviewed_today.push(id);
+  if (!data.history[today()]) data.history[today()] = 0;
+  data.history[today()]++;
+  updateStreak();
+  scheduleSave();
+  renderActive();
+};
+
+function updateStreak() {
+  const t = today();
+  if (data.last_streak_day === t) return;
+  const yesterday = addDays(t, -1);
+  data.streak = (data.last_streak_day === yesterday || data.streak === 0) ? data.streak + 1 : 1;
+  data.last_streak_day = t;
+}
+
+window.deleteMateria = (id, name) => {
+  if (!confirm(`Remover "${name}"? Essa ação não pode ser desfeita.`)) return;
+  data.materias = data.materias.filter(x => x.id !== id);
+  data.reviewed_today = data.reviewed_today.filter(x => x !== id);
+  scheduleSave();
+  renderActive();
+};
+
+window.saveNote = (id, val) => {
+  const m = data.materias.find(x => x.id === id);
+  if (m) { m.note = val; scheduleSave(); }
+};
+
+window.exportar = () => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'revisao_espacada.json';
+  a.click();
+};
+
+window.importar = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (imported.materias) { data = imported; scheduleSave(); renderActive(); }
+      else alert('Arquivo inválido.');
+    } catch { alert('Erro ao importar.'); }
+  };
+  reader.readAsText(file);
+};
+
+function stageLabel(s) {
+  return ['Novo','Iniciando','Aprendendo','Consolidando','Consolidando','Dominando','Dominando'][Math.min(s, 6)];
+}
+
+function renderStreak() {
+  const s = data.streak || 0;
+  const hasToday = data.reviewed_today.length > 0;
+  document.getElementById('streak-banner').innerHTML =
+    `<i class="ti ti-flame" style="font-size:24px;color:#E24B4A" aria-hidden="true"></i>
+     <div><span class="streak-num">${s} dia${s !== 1 ? 's' : ''}</span> de sequência
+     ${hasToday ? ' <span style="font-size:12px;color:var(--success-text)">— revisou hoje!</span>' : ''}</div>`;
+}
+
+function renderDue() {
+  const due = data.materias.filter(m => m.next_review <= today() && !data.reviewed_today.includes(m.id));
+  const done = data.materias.filter(m => data.reviewed_today.includes(m.id));
+  const ok = data.materias.filter(m => m.next_review > today() && !data.reviewed_today.includes(m.id));
+  document.getElementById('s-due').textContent = due.length;
+  document.getElementById('s-done').textContent = done.length;
+  document.getElementById('s-ok').textContent = ok.length;
+  document.getElementById('s-total').textContent = data.materias.length;
+  document.getElementById('due-list').innerHTML = due.length === 0
+    ? '<div class="empty">Nenhuma matéria para revisar hoje 🎉</div>'
+    : due.map(m => `
+      <div class="row">
+        <div class="row-left">
+          <div>
+            <div class="row-name">${m.name}</div>
+            <div class="row-meta">${stageLabel(m.stage)} · <span class="tag tag-due">revisar hoje</span></div>
+            ${m.note ? `<div class="mat-note">${m.note}</div>` : ''}
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="forget-btn" onclick="markForgot(${m.id})" title="Não lembrei" aria-label="Não lembrei de ${m.name}"><i class="ti ti-x" aria-hidden="true"></i></button>
+          <button class="check-btn" onclick="markDone(${m.id})" title="Lembrei" aria-label="Lembrei de ${m.name}"><i class="ti ti-check" aria-hidden="true"></i></button>
+        </div>
+      </div>`).join('');
+  const okAll = [...done, ...ok];
+  document.getElementById('ok-list').innerHTML = okAll.length === 0
+    ? '<div class="empty">Adicione matérias na aba "Matérias"</div>'
+    : okAll.map(m => {
+        const isDone = data.reviewed_today.includes(m.id);
+        return `
+        <div class="row">
+          <div class="row-left">
+            <button class="check-btn ${isDone ? 'done' : ''}" ${isDone ? 'disabled' : `onclick="markDone(${m.id})"`} aria-label="${m.name}">
+              <i class="ti ti-check" aria-hidden="true"></i>
+            </button>
+            <div>
+              <div class="row-name">${m.name}</div>
+              <div class="row-meta">${stageLabel(m.stage)} · próx: ${fmtDate(m.next_review)}</div>
+            </div>
+          </div>
+          ${isDone ? '<span class="tag tag-ok">revisada</span>' : ''}
+        </div>`;
+      }).join('');
+}
+
+function renderMaterias() {
+  const prog = INTERVALS.length - 1;
+  document.getElementById('mat-list').innerHTML = data.materias.length === 0
+    ? '<div class="empty">Nenhuma matéria cadastrada ainda.</div>'
+    : data.materias.map(m => `
+      <div class="mat-row">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;color:var(--text)">${m.name}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${stageLabel(m.stage)} · etapa ${m.stage + 1}/${INTERVALS.length} · próx: ${fmtDate(m.next_review)}</div>
+          <div class="prog-bg" style="width:140px"><div class="prog" style="width:${Math.round((m.stage / prog) * 100)}%"></div></div>
+          <textarea class="note-area" placeholder="Anotação..." oninput="saveNote(${m.id}, this.value)">${m.note || ''}</textarea>
+        </div>
+        <button class="btn btn-danger" onclick="deleteMateria(${m.id}, '${m.name.replace(/'/g, "\\'")}')"><i class="ti ti-trash" aria-hidden="true"></i></button>
+      </div>`).join('');
+}
+
+function renderCalendar() {
+  document.getElementById('cal-grid').innerHTML = Array.from({ length: 14 }, (_, i) => {
+    const d = addDays(today(), i);
+    const count = data.materias.filter(m => m.next_review === d).length;
+    return `<div class="cal-day${d === today() ? ' today' : ''}${count > 0 ? ' has-due' : ''}">
+      <div class="cal-date">${fmtDate(d)}</div>
+      <div class="cal-count">${count > 0 ? count + ' rev' : '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChart() {
+  const labels = [], values = [];
+  for (let i = 27; i >= 0; i--) {
+    const d = addDays(today(), -i);
+    labels.push(fmtDate(d));
+    values.push(data.history[d] || 0);
+  }
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  chartInstance = new Chart(document.getElementById('chart-week'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Revisões', data: values, backgroundColor: '#1D9E75', borderRadius: 3, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 14 }, grid: { display: false } },
+        y: { ticks: { stepSize: 1, font: { size: 11 } }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+window.showTab = tab => {
+  ['hoje', 'materias', 'stats'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['hoje', 'materias', 'stats'][i] === tab);
+  });
+  activeTab = tab;
+  renderActive();
+};
+
+function renderActive() {
+  if (activeTab === 'hoje') { renderStreak(); renderDue(); }
+  else if (activeTab === 'materias') { renderMaterias(); }
+  else if (activeTab === 'stats') { renderCalendar(); renderChart(); }
+}
+</script>
+</body>
+</html>
