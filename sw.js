@@ -4,11 +4,13 @@
    - Bibliotecas de CDN: stale-while-revalidate.
    - Requisições do Firebase (Auth/Firestore) NUNCA são interceptadas — vão direto pra rede.
 */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'revisao-' + VERSION;
 const APP_SHELL = [
   './',
   './index.html',
+  './css/styles.css',
+  './js/app.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',

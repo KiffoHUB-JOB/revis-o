@@ -22,7 +22,7 @@ Cada matéria avança por etapas de intervalo crescente conforme você revisa. A
 
 ## 🛠️ Tecnologias
 
-- HTML, CSS e JavaScript puro (sem build, sem framework) — tudo em um único `index.html`
+- HTML, CSS e JavaScript puro (sem build, sem framework) — separados em `index.html`, `css/styles.css` e `js/app.js`
 - [Firebase](https://firebase.google.com/) — Authentication (Google) + Cloud Firestore (com cache offline persistente)
 - [Chart.js](https://www.chartjs.org/) — gráfico de revisões
 - [Tabler Icons](https://tabler.io/icons) e [Google Fonts](https://fonts.google.com/) (Quicksand + Plus Jakarta Sans)
@@ -30,9 +30,13 @@ Cada matéria avança por etapas de intervalo crescente conforme você revisa. A
 
 ## 📁 Estrutura
 
-```
+```txt
 .
-├── index.html              # o app inteiro (HTML + CSS + JS)
+├── index.html              # estrutura HTML do app
+├── css/
+│   └── styles.css          # estilos visuais
+├── js/
+│   └── app.js              # Firebase, dados, renderização e interações
 ├── manifest.webmanifest    # metadados do PWA
 ├── sw.js                   # service worker (cache offline)
 ├── icon-192.png            # ícones do app
@@ -41,7 +45,7 @@ Cada matéria avança por etapas de intervalo crescente conforme você revisa. A
 └── apple-touch-icon.png
 ```
 
-> ⚠️ Todos os arquivos precisam ficar **na mesma pasta** do `index.html` para o PWA encontrar o manifest, o service worker e os ícones.
+> ⚠️ Mantenha as pastas `css/` e `js/`, o `manifest.webmanifest`, o `sw.js` e os ícones nesses caminhos para o app e o PWA funcionarem corretamente.
 
 ## 🚀 Como rodar
 
@@ -65,7 +69,7 @@ E acesse `http://localhost:8000`.
 
 ## 🔥 Configuração do Firebase
 
-A configuração fica em `index.html` (`firebaseConfig`). A `apiKey` do Firebase é **pública por natureza** em apps web — a segurança real vem das **Firestore Security Rules**. Cada usuário só pode acessar o próprio documento:
+A configuração fica em `js/app.js` (`firebaseConfig`). A `apiKey` do Firebase é **pública por natureza** em apps web — a segurança real vem das **Firestore Security Rules**. Cada usuário só pode acessar o próprio documento:
 
 ```
 rules_version = '2';
